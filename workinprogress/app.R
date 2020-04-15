@@ -97,14 +97,14 @@ server <- function(input, output, session) {
     }
   })
   
-  # # Built q model
-  # qmod <- reactive({
-  #   if (input$qmodelType == 'spline'){
-  #     return(as.formula(paste0("~s(age, k = ", input$qk, ")")))
-  #   } else {
-  #     return(as.formula("~factor(age)"))
-  #   }
-  # })
+  # Built q model
+  qmod <- reactive({
+    if (input$qmodelType == 'spline'){
+      return(list(as.formula(paste0("~s(age, k = ", input$qk, ")"))))
+    } else {
+      return(list(as.formula("~factor(age)")))
+    }
+  })
   
   # Built SR model
   srmod <- reactive({
@@ -117,20 +117,20 @@ server <- function(input, output, session) {
   
   # Plot the assessment results
   output$assessment <- renderPlot({
-    ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), srmodel = srmod())
+    ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
     plot(ple4.a4a)
   })
   
   # Plot the residuals
   output$residuals <- renderPlot({
-    fit <- sca(ple4,ple4.index, fmodel = fmod(), srmodel = srmod())
+    fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
     res <- residuals(fit, ple4, ple4.index)
     plot(res)
   })
   
   observeEvent(input$plot1,{
     output$plotF <- renderPlotly({
-      ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), srmodel = srmod())
+      ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
       tmp = as.data.frame(harvest(ple4.a4a))
       tmp = tmp[,c(1,2,7)]
       df <- acast(tmp, age~year, value.var="data")
