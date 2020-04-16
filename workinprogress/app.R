@@ -1,3 +1,8 @@
+# Basic app Work in Progress
+# Input stk 
+# Text input for submodels
+# Mortality vectors for sensitivity tests
+
 library(shiny)
 library(shinythemes)
 library(FLCore)
@@ -63,7 +68,12 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                   mainPanel(
                     tabsetPanel(
                       tabPanel("Assessment", plotOutput("assessment")),
-                      tabPanel("Diagnostics", plotOutput("residuals")),
+                      tabPanel("Diagnostics",
+                               h3("Log Residuals"),
+                               plotOutput("residuals"),
+                               br(),
+                               h3("Fit VS Original values"),
+                               plotOutput("fitVSstk")),
                       tabPanel("Submodels", 
                                actionButton(inputId="plot1","Plot F model"),
                                actionButton(inputId="plot2","Plot q model"),
@@ -75,8 +85,6 @@ ui <- fluidPage(theme = shinytheme("superhero"),
 )
 
 # Define server logic
-
-
 
 server <- function(input, output, session) {
   data("ple4")
@@ -121,11 +129,17 @@ server <- function(input, output, session) {
     plot(ple4.a4a)
   })
   
+  ### DIAGNOSTICS TAB
   # Plot the residuals
   output$residuals <- renderPlot({
     fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
     res <- residuals(fit, ple4, ple4.index)
     plot(res)
+  })
+  
+  output$fitVSstk <- renderPlot({
+    fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
+    plot(fit, ple4)
   })
   
   observeEvent(input$plot1,{
@@ -146,7 +160,8 @@ server <- function(input, output, session) {
   
   observeEvent(input$plot2,{
     output$plotQ <- renderPlotly({
-      fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
+      fit <- sca(ple4,ple4.index, fmodel = fmod(), 
+                 qmodel = qmod(), srmodel = srmod())
       sfrac <- mean(range(ple4.index)[c("startf", "endf")])
       Z <- (m(ple4) + harvest(fit))*sfrac # check M * sfrac
       lst <- dimnames(fit@index[[1]])
