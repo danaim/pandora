@@ -21,53 +21,77 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                 # Sidebar with a slider input for number of bins 
                 sidebarLayout(
                   sidebarPanel(
-                    # Choose f model
-                    selectInput("fmodelType", "Choose F model",
-                                c("Factor on year" = "factor", 
-                                  "Spline on year" = "spline",
-                                  "Factor on year and age" = "factor_age",
-                                  "Splines on year and age" = "spline_age"
+                    
+                    radioButtons("menuType", "Choose method of Submodel input :",
+                                c("Manually" = "manual",
+                                  "Drop down menu" = "dropdown")
+                                ),
+                    
+                    ### DROPDOWN MENU
+                    conditionalPanel(
+                      condition = "input.menuType == 'dropdown'",
+                      
+                      # Choose f model
+                      selectInput("fmodelType", "Choose F model",
+                                  c("Factor on year" = "factor", 
+                                    "Spline on year" = "spline",
+                                    "Factor on year and age" = "factor_age",
+                                    "Splines on year and age" = "spline_age"
                                   )
-                    ),
-                    conditionalPanel(
-                      condition = "input.fmodelType == 'spline' || input.fmodelType == 'spline_age'",
-                    # knots in splines on year
-                     sliderInput("fk", label = "knots in F model on year", value = 10,
-                                min = 3, max = 30, step = 1)
-                    ),
-                    conditionalPanel(
-                      condition = "input.fmodelType == 'spline_age'",
-                      # knots in splines on age
-                      sliderInput("fk_age", label = "knots in F model on age", value = 10,
-                                  min = 3, max = 10, step = 1)
+                      ),
+                      conditionalPanel(
+                        condition = "input.fmodelType == 'spline' || input.fmodelType == 'spline_age'",
+                        # knots in splines on year
+                        sliderInput("fk", label = "knots in F model on year", value = 10,
+                                    min = 3, 
+                                    max = as.numeric(range(ple4)["maxyear"]) - as.numeric(range(ple4)["minyear"]),
+                                    step = 1)
+                      ),
+                      conditionalPanel(
+                        condition = "input.fmodelType == 'spline_age'",
+                        # knots in splines on age
+                        sliderInput("fk_age", label = "knots in F model on age", value = 10,
+                                    min = 3, max = 10, step = 1)
+                      ),
+                      
+                      # Choose sr model
+                      selectInput("srmodelType", "Choose SR model",
+                                  c(Factor = "factor", Spline = "spline")
+                      ),
+                      conditionalPanel(condition = "input.srmodelType == 'spline'",
+                                       # Fmodel
+                                       sliderInput("srk", label = "knots in SR model", value = 10,
+                                                   min = 3, max = 30, step = 1)
+                      ),
+                      
+                      # Choose q model
+                      selectInput("qmodelType", "Choose q model",
+                                  c(Factor = "factor", Spline = "spline")
+                      ),
+                      conditionalPanel(condition = "input.qmodelType == 'spline'",
+                                       # Fmodel
+                                       sliderInput("qk", label = "knots in q model", value = 10,
+                                                   min = 3, max = 10, step = 1)
+                      )
                     ),
                     
-                    # Choose sr model
-                    selectInput("srmodelType", "Choose SR model",
-                                c(Factor = "factor", Spline = "spline")
-                    ),
-                    conditionalPanel(condition = "input.srmodelType == 'spline'",
-                                     # Fmodel
-                                     sliderInput("srk", label = "knots in SR model", value = 10,
-                                                 min = 3, max = 30, step = 1)
-                    ),
-                    
-                    # Choose q model
-                    selectInput("qmodelType", "Choose q model",
-                                c(Factor = "factor", Spline = "spline")
-                    ),
-                    conditionalPanel(condition = "input.qmodelType == 'spline'",
-                                     # Fmodel
-                                     sliderInput("qk", label = "knots in q model", value = 10,
-                                                 min = 3, max = 10, step = 1)
+                    conditionalPanel(
+                      condition = "input.menuType == 'manual'",
+                      textInput("fmodel", "fmodel :", "~factor(year)"),
+                      textInput("qmodel", "qmodel :", "~factor(age)"),
+                      textInput("srmodel", "srmodel :", "~factor(year)")
                     )
+                    
                     
                   ),
                   
                   # Show a plot of the generated distribution
                   mainPanel(
                     tabsetPanel(
-                      tabPanel("Assessment", plotOutput("assessment")),
+                      tabPanel("Assessment", 
+                               plotOutput("assessment"),
+                               br(),
+                               textOutput("AICBIC")),
                       tabPanel("Diagnostics",
                                h3("Log Residuals"),
                                plotOutput("residuals"),
@@ -84,12 +108,14 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                 )
 )
 
+# Server
 # Define server logic
 
 server <- function(input, output, session) {
   data("ple4")
   data("ple4.index")
   
+  ### Built models for DROPDOWN MENU
   # Built F model
   fmod <- reactive({
     if (input$fmodelType == 'spline'){
@@ -123,28 +149,56 @@ server <- function(input, output, session) {
     }
   })
   
-  # Plot the assessment results
+  ### Built models for MANUAL
+  
+  fmod_2 <- reactive({
+    return(as.formula(input$fmodel))
+  })
+  qmod_2 <- reactive({
+    return(list(as.formula(input$qmodel)))
+  })
+  srmod_2 <- reactive({
+    return(as.formula(input$srmodel))
+  })
+  
+  ############ Basic assessment function ##############
+  # sca reactive function
+  fit <- reactive({
+    if (input$menuType == 'dropdown'){
+      return(sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod()))
+    } else {
+      return(sca(ple4,ple4.index, fmodel = fmod_2(), qmodel = qmod_2(), srmodel = srmod_2()))
+    }
+    
+  })
+  
+  #####################################################
+  
+  # Plot the assessment results with fit()
   output$assessment <- renderPlot({
-    ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
+    ple4.a4a <- ple4 + fit()
     plot(ple4.a4a)
+  })
+  
+  # Print AIC and BIC
+  output$AICBIC <- renderText({
+    paste0("AIC : ", AIC(fit()),", BIC : ", BIC(fit()))
   })
   
   ### DIAGNOSTICS TAB
   # Plot the residuals
   output$residuals <- renderPlot({
-    fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
-    res <- residuals(fit, ple4, ple4.index)
+    res <- residuals(fit(), ple4, ple4.index)
     plot(res)
   })
   
   output$fitVSstk <- renderPlot({
-    fit <- sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
-    plot(fit, ple4)
+    plot(fit(), ple4)
   })
   
   observeEvent(input$plot1,{
     output$plotF <- renderPlotly({
-      ple4.a4a <- ple4 + sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod())
+      ple4.a4a <- ple4 + fit()
       tmp = as.data.frame(harvest(ple4.a4a))
       tmp = tmp[,c(1,2,7)]
       df <- acast(tmp, age~year, value.var="data")
@@ -160,8 +214,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$plot2,{
     output$plotQ <- renderPlotly({
-      fit <- sca(ple4,ple4.index, fmodel = fmod(), 
-                 qmodel = qmod(), srmodel = srmod())
+      fit <- fit()
       sfrac <- mean(range(ple4.index)[c("startf", "endf")])
       Z <- (m(ple4) + harvest(fit))*sfrac # check M * sfrac
       lst <- dimnames(fit@index[[1]])
