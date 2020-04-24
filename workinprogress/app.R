@@ -10,7 +10,8 @@ library(FLa4a)
 library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
-
+data("ple4")
+data("ple4.index")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = shinytheme("superhero"),
@@ -21,6 +22,9 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                 # Sidebar with a slider input for number of bins 
                 sidebarLayout(
                   sidebarPanel(
+                    
+                    fileInput("file1", label = "Stock object"),
+                    fileInput("file2", label = "Index object"),
                     
                     radioButtons("menuType", "Choose method of Submodel input :",
                                 c("Manually" = "manual",
@@ -44,7 +48,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                         # knots in splines on year
                         sliderInput("fk", label = "knots in F model on year", value = 10,
                                     min = 3, 
-                                    max = as.numeric(range(ple4)["maxyear"]) - as.numeric(range(ple4)["minyear"]),
+                                    max = 30,
                                     step = 1)
                       ),
                       conditionalPanel(
@@ -115,6 +119,28 @@ server <- function(input, output, session) {
   data("ple4")
   data("ple4.index")
   
+  ### Create stk object from input data:
+  stk <- reactive({
+    if ( is.null(input$file1)) return(NULL)
+    inFile <- input$file1
+    file <- inFile$datapath
+    # load the file into new environment and get it from there
+    e = new.env()
+    name <- load(file, envir = e)
+    return(e[[name]])
+  })
+  
+  ### Create index object from input data:
+  idx <- reactive({
+    if ( is.null(input$file2)) return(NULL)
+    inFile <- input$file2
+    file <- inFile$datapath
+    # load the file into new environment and get it from there
+    e = new.env()
+    name <- load(file, envir = e)
+    return(e[[name]])
+  })
+  
   ### Built models for DROPDOWN MENU
   # Built F model
   fmod <- reactive({
@@ -165,9 +191,9 @@ server <- function(input, output, session) {
   # sca reactive function
   fit <- reactive({
     if (input$menuType == 'dropdown'){
-      return(sca(ple4,ple4.index, fmodel = fmod(), qmodel = qmod(), srmodel = srmod()))
+      return(sca(stk(),idx(), fmodel = fmod(), qmodel = qmod(), srmodel = srmod()))
     } else {
-      return(sca(ple4,ple4.index, fmodel = fmod_2(), qmodel = qmod_2(), srmodel = srmod_2()))
+      return(sca(stk(),idx(), fmodel = fmod_2(), qmodel = qmod_2(), srmodel = srmod_2()))
     }
     
   })
@@ -176,8 +202,8 @@ server <- function(input, output, session) {
   
   # Plot the assessment results with fit()
   output$assessment <- renderPlot({
-    ple4.a4a <- ple4 + fit()
-    plot(ple4.a4a)
+    stk.a4a <- stk() + fit()
+    plot(stk.a4a)
   })
   
   # Print AIC and BIC
@@ -188,18 +214,18 @@ server <- function(input, output, session) {
   ### DIAGNOSTICS TAB
   # Plot the residuals
   output$residuals <- renderPlot({
-    res <- residuals(fit(), ple4, ple4.index)
+    res <- residuals(fit(), stk(), idx())
     plot(res)
   })
   
   output$fitVSstk <- renderPlot({
-    plot(fit(), ple4)
+    plot(fit(), stk())
   })
   
   observeEvent(input$plot1,{
     output$plotF <- renderPlotly({
-      ple4.a4a <- ple4 + fit()
-      tmp = as.data.frame(harvest(ple4.a4a))
+      stk.a4a <- stk() + fit()
+      tmp = as.data.frame(harvest(stk.a4a))
       tmp = tmp[,c(1,2,7)]
       df <- acast(tmp, age~year, value.var="data")
       fig <- plot_ly(z = ~ df)
@@ -215,8 +241,8 @@ server <- function(input, output, session) {
   observeEvent(input$plot2,{
     output$plotQ <- renderPlotly({
       fit <- fit()
-      sfrac <- mean(range(ple4.index)[c("startf", "endf")])
-      Z <- (m(ple4) + harvest(fit))*sfrac # check M * sfrac
+      sfrac <- mean(range(idx())[c("startf", "endf")])
+      Z <- (m(stk()) + harvest(fit))*sfrac # check M * sfrac
       lst <- dimnames(fit@index[[1]])
       lst$x <- stock.n(fit)*exp(-Z)
       stkn <- do.call("trim", lst)

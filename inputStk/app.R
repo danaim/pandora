@@ -13,7 +13,8 @@ ui <- shinyUI(fluidPage(
     fileInput("file2", label = "Index object"),
     actionButton(inputId="plot1","Plot Stock Object"),
     actionButton(inputId="plot2","Plot Cohort Consistency in Index"),
-    plotOutput("plot_stk"))
+    plotOutput("plot_stk"),
+    textOutput("summary"))
   
 )
 )
@@ -21,18 +22,44 @@ ui <- shinyUI(fluidPage(
 # Define server logic
 server <- shinyServer(function(input, output) {
   
-  observeEvent(input$plot1,{
+  output$summary <- renderText({
+    inFile <- input$file
+    file <- inFile$datapath
+    e = new.env()
+    name <- load(file, envir = e)
+    data <- e[[name]]
+    paste(harvest(data))
+  })
+  
+  stk <- reactive({
     if ( is.null(input$file)) return(NULL)
     inFile <- input$file
     file <- inFile$datapath
     # load the file into new environment and get it from there
     e = new.env()
     name <- load(file, envir = e)
-    data <- e[[name]]
-    
+    return(e[[name]])
+  })
+  
+  # observeEvent(input$plot1,{
+  #   if ( is.null(input$file)) return(NULL)
+  #   inFile <- input$file
+  #   file <- inFile$datapath
+  #   # load the file into new environment and get it from there
+  #   e = new.env()
+  #   name <- load(file, envir = e)
+  #   data <- e[[name]]
+  #   
+  #   # Plot the data
+  #   output$plot_stk <- renderPlot({
+  #     plot(data)
+  #   })
+  # })
+  
+  observeEvent(input$plot1,{
     # Plot the data
     output$plot_stk <- renderPlot({
-      plot(data)
+      plot(stk())
     })
   })
   
