@@ -82,7 +82,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                     conditionalPanel(
                       condition = "input.menuType == 'manual'",
                       textInput("fmodel", "fmodel :", "~factor(year)"),
-                      textInput("qmodel", "qmodel :", "~factor(age)"),
+                      textInput("qmodel", "qmodel (separate qmodels with &) :", "~factor(age)"),
                       textInput("srmodel", "srmodel :", "~factor(year)")
                     )
                     
@@ -104,6 +104,8 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                                plotOutput("fitVSstk")),
                       tabPanel("Submodels", 
                                actionButton(inputId="plot1","Plot F model"),
+                               # Choose index to plot
+                               selectInput("indexName", "Choose index to plot :"," "),
                                actionButton(inputId="plot2","Plot q model"),
                                plotlyOutput("plotF"),
                                plotlyOutput("plotQ"))
@@ -181,7 +183,11 @@ server <- function(input, output, session) {
     return(as.formula(input$fmodel))
   })
   qmod_2 <- reactive({
-    return(list(as.formula(input$qmodel)))
+    y <- unlist(strsplit(input$qmodel,"&"))
+    ls <- list()
+    for(i in 1:length(y)){ls[[i]] <- y[i]}
+    ls <- lapply(ls, formula)
+    return(ls)
   })
   srmod_2 <- reactive({
     return(as.formula(input$srmodel))
@@ -238,15 +244,24 @@ server <- function(input, output, session) {
     })
   })
   
+  idxNames = reactive({
+    names(idx())
+  })
+  observe({
+    updateSelectInput(session, "indexName",
+                      choices = idxNames()
+    )})
+  
   observeEvent(input$plot2,{
     output$plotQ <- renderPlotly({
       fit <- fit()
-      sfrac <- mean(range(idx())[c("startf", "endf")])
+      idx <- idx()
+      sfrac <- mean(range(idx[[input$indexName]])[c("startf", "endf")])
       Z <- (m(stk()) + harvest(fit))*sfrac # check M * sfrac
-      lst <- dimnames(fit@index[[1]])
+      lst <- dimnames(fit@index[[input$indexName]])
       lst$x <- stock.n(fit)*exp(-Z)
       stkn <- do.call("trim", lst)
-      tmp = as.data.frame(index(fit)[[1]]/stkn)
+      tmp = as.data.frame(index(fit)[[input$indexName]]/stkn)
       tmp = tmp[,c(1,2,7)]
       df <- acast(tmp, age~year, value.var="data")
       
