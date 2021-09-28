@@ -10,8 +10,7 @@ library(FLa4a)
 library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
-data("ple4")
-data("ple4.index")
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = shinytheme("superhero"),
@@ -78,13 +77,14 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                                                    min = 3, max = 10, step = 1)
                       )
                     ),
-                    
+                    ### MANUAL MENU
                     conditionalPanel(
                       condition = "input.menuType == 'manual'",
-                      textInput("fmodel", "fmodel :", "~factor(year)"),
-                      textInput("qmodel", "qmodel (separate qmodels with &) :", "~factor(age)"),
-                      textInput("srmodel", "srmodel :", "~factor(year)")
-                    )
+                      textInput("fmodel", "fmodel :",value = ""),
+                      textInput("qmodel", "qmodel (separate qmodels with &) :",value = ""),
+                      textInput("srmodel", "srmodel :",value = "")
+                    ),
+                    actionButton("run","Run Assessment")
                     
                     
                   ),
@@ -95,7 +95,9 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                       tabPanel("Assessment", 
                                plotOutput("assessment"),
                                br(),
-                               textOutput("AICBIC")),
+                               textOutput("AICBIC"),
+                               br(),
+                               textOutput("debug")),
                       tabPanel("Diagnostics",
                                h3("Log Residuals"),
                                plotOutput("residuals"),
@@ -117,9 +119,8 @@ ui <- fluidPage(theme = shinytheme("superhero"),
 # Server
 # Define server logic
 
-server <- function(input, output, session) {
-  data("ple4")
-  data("ple4.index")
+server <- function(session, input, output) {
+
   
   ### Create stk object from input data:
   stk <- reactive({
@@ -195,7 +196,7 @@ server <- function(input, output, session) {
   
   ############ Basic assessment function ##############
   # sca reactive function
-  fit <- reactive({
+  fit <- eventReactive(input$run,{
     if (input$menuType == 'dropdown'){
       return(sca(stk(),idx(), fmodel = fmod(), qmodel = qmod(), srmodel = srmod()))
     } else {
@@ -205,7 +206,10 @@ server <- function(input, output, session) {
   })
   
   #####################################################
-  
+  # Check the class of stk and idx
+  output$debug <- renderText({
+    paste0("fmodel: ", as.character(fmod_2()), "  qmodel: ", as.character(qmod_2()))
+  })
   # Plot the assessment results with fit()
   output$assessment <- renderPlot({
     stk.a4a <- stk() + fit()
