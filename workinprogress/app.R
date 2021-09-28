@@ -244,7 +244,11 @@ server <- function(session, input, output) {
                                          yaxis = list(title = 'age'),
                                          zaxis = list(title = 'f')))
       
-      fig
+      fig %>%
+        layout(plot_bgcolor  = "rgba(0, 0, 0, 0)",
+               paper_bgcolor = "rgba(0, 0, 0, 0)",
+               fig_bgcolor   = "rgba(0, 0, 0, 0)",
+               font = list(color = '#FFFFFF'))
     })
   })
   
@@ -275,7 +279,11 @@ server <- function(session, input, output) {
                                          yaxis = list(title = 'age'),
                                          zaxis = list(title = 'Catchability')))
       
-      fig
+      fig %>%
+        layout(plot_bgcolor  = "rgba(0, 0, 0, 0)",
+               paper_bgcolor = "rgba(0, 0, 0, 0)",
+               fig_bgcolor   = "rgba(0, 0, 0, 0)",
+               font = list(color = '#FFFFFF'))
     })
   })
 
