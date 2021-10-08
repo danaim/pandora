@@ -11,7 +11,6 @@ library(googleVis)
 library(shinyWidgets)
 library(shinyBS)
 library(tippy)
-library(base)
 
 ui <- fluidPage(theme = shinytheme("superhero"),
                 
