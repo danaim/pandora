@@ -1,3 +1,18 @@
+library(shiny)
+library(shinythemes)
+library(spict)
+library(TMB)
+library(ggplot2)
+library(ellipse)
+library(gridExtra)
+library(dplyr)
+library(shinycssloaders)
+library(googleVis)
+library(shinyWidgets)
+library(shinyBS)
+library(tippy)
+library(base)
+
 ui <- fluidPage(theme = shinytheme("superhero"),
                 
                 #Title developed as 
