@@ -74,6 +74,25 @@
     .caption{
       font-size: 13px;
     }
+    .button {
+      background-color: #3475b4;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 24px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 8px;
+      box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+      transition-duration: 0.4s;
+    }
+    .button:hover {
+      background-color: #3475b4; /* Blue */
+      color: white;
+    }
     code {
       background-color: #E5E5E5;
       border: 1px solid #AAA;
@@ -93,17 +112,14 @@
   </div>
   <div id="outer-content">
     <div id="intro">
-      <p>If you're seeing this page, that means Shiny Server is installed and running. <strong>Congratulations!</strong> </p>
+      <p> Stock assessment shiny apps <strong>Beta version</strong> </p>
     </div>
     <div id="content">
       <div id="main">
 
-        <form action="./sample-apps/spict/">
-          <input type="submit" value="SPiCT app" />
-        </form>
-        <form action="./sample-apps/a4a/">
-          <input type="submit" value="a4a app" />
-        </form>
+        <a href="./sample-apps/spict/" class="button">SPiCT app</a>
+        <a href="./sample-apps/a4a/" class="button">a4a app</a>
+
       </div>
 
     </div>
