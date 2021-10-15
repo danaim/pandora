@@ -10,6 +10,7 @@ library(FLa4a)
 library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
+source('retro.R')
 
 
 # Define UI for application that draws a histogram
@@ -96,8 +97,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                                plotOutput("assessment"),
                                br(),
                                textOutput("AICBIC"),
-                               br(),
-                               textOutput("debug")),
+                               br()),
                       tabPanel("Diagnostics",
                                h3("Log Residuals"),
                                plotOutput("residuals"),
@@ -110,7 +110,13 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                                selectInput("indexName", "Choose index to plot :"," "),
                                actionButton(inputId="plot2","Plot q model"),
                                plotlyOutput("plotF"),
-                               plotlyOutput("plotQ"))
+                               plotlyOutput("plotQ")),
+                      tabPanel("Retrospective", 
+                               plotOutput("retro"),
+                               sliderInput("yrsback", label = "Years of retrospective", value = 3,
+                                           min = 2, 
+                                           max = 5,
+                                           step = 1))
                     )
                   )
                 )
@@ -285,6 +291,10 @@ server <- function(session, input, output) {
                fig_bgcolor   = "rgba(0, 0, 0, 0)",
                font = list(color = '#FFFFFF'))
     })
+  })
+  
+  output$retro <- renderPlot({
+    plot(retro(stk(), idx(), fit(), retro = input$yrsback))
   })
 
   
