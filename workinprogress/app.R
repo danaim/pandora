@@ -11,11 +11,17 @@ library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
 source('retro.R')
+source('cohorts_consistency.R')
 
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(theme = shinytheme("superhero"),
-                
+ui <- fluidPage(theme = shinytheme("darkly"),
+                #####
+                # HTML
+                tags$head(
+                  tags$style(HTML('#run{border: 0.5px solid white;}'))
+                ),
+                #####
                 # Application title
                 titlePanel("Stock assessment"),
                 
@@ -93,11 +99,22 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                   # Show a plot of the generated distribution
                   mainPanel(
                     tabsetPanel(
+                      tabPanel("Inspect Input", 
+                               br(),br(),
+                               selectInput("inspect_input", "Choose plot :",
+                                           c("Catch at age" = "catch_age", 
+                                             "Index at age" = "index_age",
+                                             "Catch cohort consistency" = "cohort_catch",
+                                             "Index cohort consistency" = "cohort_index"
+                                           )
+                               ),
+                               plotOutput("inspectPlot", height = 600, width = 800)),
                       tabPanel("Assessment", 
-                               plotOutput("assessment"),
-                               br(),
+                               plotOutput("assessment", height = 600, width = 800),
+                               br(),br(),
                                textOutput("AICBIC"),
-                               br()),
+                               br(),br(),
+                               plotOutput("assessment_sim", height = 600, width = 800)),
                       tabPanel("Diagnostics",
                                h3("Log Residuals"),
                                plotOutput("residuals"),
@@ -212,10 +229,31 @@ server <- function(session, input, output) {
   })
   
   #####################################################
-  # Check the class of stk and idx
-  output$debug <- renderText({
-    paste0("fmodel: ", as.character(fmod_2()), "  qmodel: ", as.character(qmod_2()))
+  # Plot input
+  output$inspectPlot <- renderPlot({
+    if(input$inspect_input == "catch_age"){
+      req(stk())
+      df<-as.data.frame(catch.n(stk()))
+      df<-na.omit(df)
+      plot=ggplot(df,aes(x = age, y = data,color= as.factor(year)))+ geom_line(size = 1)+ggtitle("Catch at age")
+      return(plot)
+    }
+    else if(input$inspect_input == "cohort_catch"){
+      plotInternalConsistency(FLIndex(index = catch.n(stk())))
+    }
+    else if(input$inspect_input == "index_age"){
+      req(idx())
+      df<-as.data.frame(index(idx()[[1]]))
+      df<-na.omit(df)
+      plot=ggplot(df, aes(x = age, y = data,color= as.factor(year)))+geom_line(size = 1)+ggtitle("Index at age")
+      return(plot)
+    }
+    else if(input$inspect_input == "cohort_index"){
+      req(idx())
+      plotInternalConsistency(idx()[[1]])
+    }
   })
+
   # Plot the assessment results with fit()
   output$assessment <- renderPlot({
     stk.a4a <- stk() + fit()
@@ -224,7 +262,13 @@ server <- function(session, input, output) {
   
   # Print AIC and BIC
   output$AICBIC <- renderText({
-    paste0("AIC : ", AIC(fit()),", BIC : ", BIC(fit()))
+    paste0("AIC : ", round(AIC(fit()),2),", BIC : ", round(BIC(fit()),2))
+  })
+  
+  # Plot the assessment results with simulations
+  output$assessment_sim <- renderPlot({
+    stk.a4a.sim <- FLStocks(fit = stk() +simulate(fit(), 1000), catch = stk())
+    plot(stk.a4a.sim)
   })
   
   ### DIAGNOSTICS TAB
