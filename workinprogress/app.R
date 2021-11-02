@@ -23,7 +23,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                 ),
                 #####
                 # Application title
-                titlePanel("Stock assessment"),
+                titlePanel("a4a Stock assessment"),
                 
                 # Sidebar with a slider input for number of bins 
                 sidebarLayout(
@@ -116,11 +116,17 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                br(),br(),
                                plotOutput("assessment_sim", height = 600, width = 800)),
                       tabPanel("Diagnostics",
-                               h3("Log Residuals"),
-                               plotOutput("residuals"),
-                               br(),
-                               h3("Fit VS Original values"),
-                               plotOutput("fitVSstk")),
+                               br(),br(),
+                               selectInput("diagnostics", "Choose diagnostics plot :",
+                                           c("Aggregated catch diagnostics" = "catch", 
+                                             "Standardized log residuals" = "log_residuals",
+                                             "Bubble plot of log residuals" = "bubbles",
+                                             "Fitted and observed catch" = "fitVScatch",
+                                             "Fitted and observed index" = "fitVSindex"
+                                           )
+                               ),
+                               br(),br(),
+                               plotOutput("residuals", height = 600, width = 800)),
                       tabPanel("Submodels", 
                                actionButton(inputId="plot1","Plot F model"),
                                # Choose index to plot
@@ -133,7 +139,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                sliderInput("yrsback", label = "Years of retrospective", value = 3,
                                            min = 2, 
                                            max = 5,
-                                           step = 1))
+                                           step = 1)),
+                      tabPanel("Reference points", 
+                               plotOutput("refpoints_plot",  height = 600, width = 800))
                     )
                   )
                 )
@@ -274,13 +282,27 @@ server <- function(session, input, output) {
   ### DIAGNOSTICS TAB
   # Plot the residuals
   output$residuals <- renderPlot({
+    req(fit())
+    res_catch <- computeCatchDiagnostics(fit(),stk())
     res <- residuals(fit(), stk(), idx())
-    plot(res)
+    if(input$diagnostics == 'catch'){
+      plot(res_catch)
+    }
+    else if(input$diagnostics == 'log_residuals'){
+      plot(res)
+    }
+    else if(input$diagnostics == 'bubbles'){
+      bubbles(res)
+    }
+    else if(input$diagnostics == 'fitVScatch'){
+      plot(fit(),stk())
+    }
+    else if(input$diagnostics == 'fitVSindex'){
+      plot(fit(),idx())
+    }
+    
   })
   
-  output$fitVSstk <- renderPlot({
-    plot(fit(), stk())
-  })
   
   observeEvent(input$plot1,{
     output$plotF <- renderPlotly({
@@ -340,7 +362,30 @@ server <- function(session, input, output) {
   output$retro <- renderPlot({
     plot(retro(stk(), idx(), fit(), retro = input$yrsback))
   })
+  
 
+  
+  refpoints <- reactive({
+    stk_df <- as.data.frame(fbar(stk()+simulate(fit(),500)), drop=TRUE)
+    rp_<- as.data.frame(brp(FLBRP(stk()+simulate(fit(),500)))@refpts["f0.1"])
+    
+    rp_sub <- rp_[which(rp_$quant=="harvest"),]
+    final <- merge(stk_df,rp_sub,by=c("iter"),all=T)
+    final2 <- final[which(final$year==as.numeric(stk()@range['maxyear'])),]
+    colnames(final2) <- c("iter","year","fbar","refp","quant","f0.1")
+    final2$FcurrF0.1 <- final2$fbar/final2$f0.1
+    
+    final3 <- final2[,c('iter','fbar','quant','f0.1','FcurrF0.1')]
+    x <- reshape2::melt(final3)
+    return(x)
+  })
+
+  output$refpoints_plot <- renderPlot({
+    p=ggplot(data = refpoints(), aes(x = value,color = variable,fill = variable)) +
+      geom_density(alpha = 0.6)+
+      facet_wrap(~variable, scales = 'free', ncol = 1)
+    return(p)
+  })
   
 }
 
