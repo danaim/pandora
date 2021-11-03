@@ -7,6 +7,7 @@ library(shiny)
 library(shinythemes)
 library(FLCore)
 library(FLa4a)
+library(FLBRP)
 library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
@@ -141,7 +142,11 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                            max = 5,
                                            step = 1)),
                       tabPanel("Reference points", 
-                               plotOutput("refpoints_plot",  height = 600, width = 800))
+                               tableOutput("refpoints_tab"),
+                               br(),br(),
+                               plotOutput("refpoints_plot",  height = 600, width = 800)
+
+                               )
                     )
                   )
                 )
@@ -378,6 +383,20 @@ server <- function(session, input, output) {
     final3 <- final2[,c('iter','fbar','quant','f0.1','FcurrF0.1')]
     x <- reshape2::melt(final3)
     return(x)
+  })
+  
+  refpts_table <- reactive({
+    req(stk(),fit())
+    ref_pts <- brp(FLBRP(stk()+fit()))
+    x <- data.frame(F01 = as.numeric(ref_pts@refpts['f0.1','harvest']),
+                    Fcurrent = as.numeric(fbar(stk()+fit())[,as.character(range(stk())['maxyear'])]),
+                    Fcurrent_F01 = as.numeric(fbar(stk()+fit())[,as.character(range(stk())['maxyear'])])/ as.numeric(ref_pts@refpts['f0.1','harvest'])
+                    )
+    x
+  })
+  
+  output$refpoints_tab <- renderTable({
+    refpts_table()
   })
 
   output$refpoints_plot <- renderPlot({
