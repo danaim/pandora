@@ -1,6 +1,4 @@
 # Basic app Work in Progress
-# Input stk 
-# Text input for submodels
 # Mortality vectors for sensitivity tests
 
 library(shiny)
@@ -44,10 +42,10 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                       
                       # Choose f model
                       selectInput("fmodelType", "Choose F model",
-                                  c("Factor on year" = "factor", 
-                                    "Spline on year" = "spline",
-                                    "Factor on year and age" = "factor_age",
-                                    "Splines on year and age" = "spline_age"
+                                  c("Factor on year and age" = "factor_age",
+                                    "Splines on year and age" = "spline_age",
+                                    "Factor on year spline on age" = "factor", 
+                                    "Spline on year factor on age" = "spline"
                                   )
                       ),
                       conditionalPanel(
@@ -59,7 +57,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                     step = 1)
                       ),
                       conditionalPanel(
-                        condition = "input.fmodelType == 'spline_age'",
+                        condition = "input.fmodelType == 'spline_age' || input.fmodelType == 'factor'",
                         # knots in splines on age
                         sliderInput("fk_age", label = "knots in F model on age", value = 10,
                                     min = 3, max = 10, step = 1)
@@ -184,10 +182,10 @@ server <- function(session, input, output) {
   # Built F model
   fmod <- reactive({
     if (input$fmodelType == 'spline'){
-      return(as.formula(paste0("~s(year, k = ", input$fk, ")")))
+      return(as.formula(paste0("~s(year, k = ", input$fk, ")+factor(age)")))
     } 
     else if (input$fmodelType == 'factor') {
-      return(as.formula("~factor(year)"))
+      return(as.formula("~factor(year)+s(age, k = ",input$fk_age, ")"))
     }
     else if (input$fmodelType == 'spline_age') {
       return(as.formula(paste0("~s(year, k = ", input$fk, ")+s(age, k = ", input$fk_age,")")))
