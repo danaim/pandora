@@ -7,7 +7,10 @@ retro <- function(stk, idxs, fit, retro=2, ...){
     args$indices <- FLIndices(window(idxs, end=yr))
     args$fmodel <- fit@pars@stkmodel@fMod
     args$srmodel <- fit@pars@stkmodel@srMod
-    args$qmodel <- list(fit@pars@qmodel[[1]]@formula)
+    args$qmodel <- list()
+    for(i in 1:length(idxs)){
+      args$qmodel <- list(fit@pars@qmodel[[i]]@formula)
+    }
     fit <- do.call("sca", args)
     args$stock + fit
   })
