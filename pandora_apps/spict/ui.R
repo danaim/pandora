@@ -1,3 +1,4 @@
+rm(list=ls())
 library(shiny)
 library(shinythemes)
 library(spict)
@@ -11,41 +12,18 @@ library(googleVis)
 library(shinyWidgets)
 library(shinyBS)
 library(tippy)
+library(base)
 
 ui <- fluidPage(theme = shinytheme("superhero"),
                 
                 #Title developed as 
                 #Create a page with a top level navigation bar
-                navbarPage("Stock assessment - a4a - SPiCT",
-                           tabPanel("Intro",
-                                    
-                                    h4( p(strong("General"))),
-                                    p("Through this application the user can easily run two stock assessment models with no programming knowledge required.
-                                      The two models are the stochastic surplus production model in continious time  (SPiCT) and the statistical catch-at-age stock assesment model developed as part of the Assessment For ALL (a4a). 
-                                      For both models general information is provided about the dependencies, type of data needed and settings."),
-                                    br(),
-                                    
-                                    h4(p(strong('Disclaimer'))),
-                                    p('The application was created with R programming language [1], 
-                                      is free to use and comes with absolutely no warranty.'),
-                                    br(), 
-                                    
-                                    h4( p(strong("Creators"))),
-                                    p ('Maria Kikeri, Danai Mantopoulou-Palouka, Vasiliki Sgardeli and Dimitrios Damalas. contact: shark@hcmr.gr'),
-                                    br(),
-                                    
-                                    h4(p(strong('References')), align='bottom'),
-                                    h6(p('[1] R Core Team (2020). R: A language and environment for statistical computing. R Foundation for
-                                       Statistical Computing, Vienna, Austria. URL https://www.R-project.org/')),
-                                    
-                           ),
-                           tabPanel("SPiCT",          
+                navbarPage("Stock assessment - SPiCT",
+                           tabPanel("",          
                                     #Tab panel with info
                                     tabsetPanel(
                                       tabPanel("Info",
-                                                
-                                                 h4("SPiCT"),
-                                                 br(),
+                                                 br(), br(),
                                                  h4( p(strong("General"))),
                                                  p("This application implements the Stochastic Production Model in Continuous Time (SPiCT, Pedersen & Berg 2016) [1] and its time- 
                                                         variant productivity extentions (Mildenberger et al. 2020) [2]."),

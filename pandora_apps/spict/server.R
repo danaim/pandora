@@ -139,7 +139,7 @@ server <- function( input, output, session) {
   #conditionalInput for original model
   output$priorgrowthm <- renderUI({
     numericInput("mg", "Mean-r:", NULL, min = 0, max = 1000000)
-    bsPopover(id = "mg", title = "Prior for the intrinsic growth rate (mean)",placement="right",trigger = "hover")
+    #bsPopover(id = "mg", title = "Prior for the intrinsic growth rate (mean)",placement="right",trigger = "hover")
   })
   
   output$priorgrowthsd <- renderUI({
