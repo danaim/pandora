@@ -65,12 +65,22 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                       
                       # Choose sr model
                       selectInput("srmodelType", "Choose SR model",
-                                  c(Factor = "factor", Spline = "spline")
+                                  c("Factor" = "factor", 
+                                    "Spline" = "spline",
+                                    "Geometric mean" = "geomean",
+                                    "Ricker" = "ricker",
+                                    "Beverton - Holt" = "bevholt",
+                                    "Hockey stick" = "hockey")
                       ),
                       conditionalPanel(condition = "input.srmodelType == 'spline'",
                                        # Fmodel
                                        sliderInput("srk", label = "knots in SR model", value = 10,
                                                    min = 3, max = 30, step = 1)
+                      ),
+                      conditionalPanel(condition = "!(input.srmodelType == 'spline' || input.srmodelType == 'factor' )",
+                                       # Fmodel
+                                       sliderInput("cv", label = "CV", value = 0.2,
+                                                   min = 0.1, max = 1, step = 0.1)
                       ),
                       
                       # Choose q model
@@ -207,8 +217,21 @@ server <- function(session, input, output) {
   srmod <- reactive({
     if (input$srmodelType == 'spline'){
       return(as.formula(paste0("~s(year, k = ", input$srk, ")")))
-    } else {
+    } 
+    else if(input$srmodelType == 'factor'){
       return(as.formula("~factor(year)"))
+    }
+    else if(input$srmodelType == 'geomean'){
+      return(as.formula(paste0("~geomean(CV = ", input$cv,")")))
+    }
+    else if(input$srmodelType == 'ricker'){
+      return(as.formula(paste0("~ricker(CV = ", input$cv,")")))
+    }
+    else if(input$srmodelType == 'bevholt'){
+      return(as.formula(paste0("~bevholt(CV = ", input$cv,")")))
+    }
+    else if(input$srmodelType == 'hockey'){
+      return(as.formula(paste0("~hockey(CV = ", input$cv,")")))
     }
   })
   
