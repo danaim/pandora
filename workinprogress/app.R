@@ -131,8 +131,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                # Choose index to plot
                                selectInput("indexName", "Choose index to plot :"," "),
                                actionButton(inputId="plot2","Plot q model"),
-                               plotlyOutput("plotF"),
-                               plotlyOutput("plotQ")),
+                               plotlyOutput("plotF", height = 600, width = 600),
+                               plotlyOutput("plotQ", height = 600, width = 600)),
                       tabPanel("Retrospective", 
                                plotOutput("retro"),
                                sliderInput("yrsback", label = "Years of retrospective", value = 3,
@@ -312,13 +312,13 @@ server <- function(session, input, output) {
       stk.a4a <- stk() + fit()
       tmp = as.data.frame(harvest(stk.a4a))
       tmp = tmp[,c(1,2,7)]
-      df <- acast(tmp, age~year, value.var="data")
-      fig <- plot_ly(z = ~ df)
-      fig <- fig %>% add_surface()
+      fig <- plot_ly(x = ~tmp$year, y = ~tmp$age, z = tmp$data, 
+                     type = 'mesh3d',
+                     colors = colorRamp(c("darkblue","green","yellow")),
+                     intensity = ~tmp$data)
       fig <- fig %>% layout(scene = list(xaxis = list(title = 'year'),
-                                         yaxis = list(title = 'age'),
-                                         zaxis = list(title = 'f')))
-      
+                                  yaxis = list(title = 'age'),
+                                  zaxis = list(title = 'harvest')))
       fig %>%
         layout(plot_bgcolor  = "rgba(0, 0, 0, 0)",
                paper_bgcolor = "rgba(0, 0, 0, 0)",
@@ -346,10 +346,10 @@ server <- function(session, input, output) {
       stkn <- do.call("trim", lst)
       tmp = as.data.frame(index(fit)[[input$indexName]]/stkn)
       tmp = tmp[,c(1,2,7)]
-      df <- acast(tmp, age~year, value.var="data")
-      
-      fig <- plot_ly(z = ~ df)
-      fig <- fig %>% add_surface()
+      fig <- plot_ly(x = ~tmp$year, y = ~tmp$age, z = tmp$data, 
+                     type = 'mesh3d',
+                     colors = colorRamp(c("darkblue","green","yellow")),
+                     intensity = ~tmp$data)
       fig <- fig %>% layout(scene = list(xaxis = list(title = 'year'),
                                          yaxis = list(title = 'age'),
                                          zaxis = list(title = 'Catchability')))
