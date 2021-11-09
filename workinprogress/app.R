@@ -9,6 +9,7 @@ library(FLBRP)
 library(plotly)
 library(reshape2)
 library(ggplotFL); theme_set(theme_bw())
+library(reshape2)
 source('retro.R')
 source('cohorts_consistency.R')
 
@@ -110,6 +111,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                     tabsetPanel(
                       tabPanel("Inspect Input", 
                                br(),br(),
+                               plotOutput("catches", height = 300, width = 800),
+                               br(),br(),
                                selectInput("inspect_input", "Choose plot :",
                                            c("Catch at age" = "catch_age", 
                                              "Index at age" = "index_age",
@@ -117,6 +120,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                              "Index cohort consistency" = "cohort_index"
                                            )
                                ),
+                               br(),br(),
                                plotOutput("inspectPlot", height = 600, width = 800)),
                       tabPanel("Assessment", 
                                plotOutput("assessment", height = 600, width = 800),
@@ -264,6 +268,17 @@ server <- function(session, input, output) {
   
   #####################################################
   # Plot input
+  output$catches <- renderPlot({
+    req(stk())
+    df2 <- data.frame(year = range(stk())["minyear"]:range(stk())['maxyear'],
+                      catch = as.numeric(catch(stk())),
+                      landings = as.numeric(landings(stk())),
+                      discards = as.numeric(discards(stk()))
+    )
+    df2 <- melt(df2,id.vars = 'year')
+    ggplot(data = df2, aes(x = year, y = value, color = variable)) + geom_line()
+  })
+  
   output$inspectPlot <- renderPlot({
     if(input$inspect_input == "catch_age"){
       req(stk())
