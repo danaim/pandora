@@ -122,10 +122,50 @@
         <a href="./sample-apps/spict/" class="button">SPiCT app</a>
         <a href="./sample-apps/a4a/" class="button">a4a app</a>
 
-        <p> Through this application the user can easily implement two stock assessment models without no programming knowledge required.
-           The two models are the stochastic surplus production model in continious time  (SPiCT) and the statistical catch-at-age stock assesment
-           model developed as part of the Assessment For ALL (a4a).For both models general information is provided about the dependencies, type of data needed and settings.
-         </p>
+        <h3> Overview </h3>
+
+        <p> Through this web application the user can implement two fisheries stock assessment models/approaches: </p>
+        <ul>
+          <li> the stochastic surplus production model in continuous time (SPiCT) [1] and </li>
+          <li> the statistical catch-at-age stock assessment model developed as part of the assessment for all (a4a) [2].  </li>
+        </ul>
+        <p> The SPiCT application includes the two time-variant productivity extensions, allowing for gradually varying productivity or regimes of productivity [3].
+          The a4a assessment is modified to include environmental variability on recruitment though an external environmental index provided by the user.  </p>
+        <p> The application was developed in Shiny under the R language programming environment [4, 5].</p>
+
+        <h3> Documentation </h3>
+
+        <p><a href="https://flr-project.org/FLa4a/articles/sca.pdf">a4a manual</a></p>
+        <p><a href="https://github.com/DTUAqua/spict/raw/master/spict/inst/doc/spict_handbook.pdf ">SPiCT manual</a></p>
+
+        <h3> Help files </h3>
+
+        <p> Test files, source code and official manuals for both approaches can be found in
+          <a href="https://cloudfs.hcmr.gr/index.php/s/yRqWk0zTTOCWbZT ">HCMR's cloud</a> </p>
+
+        <h3> Acknowledgments </h3>
+
+        <p> This application is part of the PANDORA’s toolbox developed as part of the
+          <a href="https://www.pandora-fisheries-project.eu/"> PANDORA project</a> </p>
+
+        <h3> How to cite </h3>
+
+        <h3> Developers </h3>
+        <p> Contacts: Danai Mantopoulou-Palouka, Maria Kikeri, Vasiliki Sgardeli, Dimitrios Damalas danaim@hcmr.gr, vsgard@hcmr.gr, shark@hcmr.gr   </p>
+
+        <h3> References </h3>
+        <ol>
+          <li> Pedersen, M.W., Berg, C.W. (2017). A stochastic surplus production model in continuous time.
+            <em>Fish and Fisheries</em>, 18: 226-243. </li>
+          <li> ardim, E., Millar, C.P., Mosqueira, I., Scott, F., Osio, G.C., Ferretti, M., Alzorriz, N., Orio, A. (2015).
+            What if stock assessment is as simple as a linear model? The a4a initiative. <em>ICES Journal of Marine Science</em>, 72: 232-236</li>
+          <li> Mildenberger, T.K., Berg, C.W., Pedersen, M.W., Kokkalis, A., Nielsen, J.R. (2020).
+            Time-variant productivity in biomass dynamic models on seasonal and long-term scales, <em>ICES Journal of Marine Science</em>, 77(1): 174-187.</li>
+          <li>  R Core Team (2020). R: A language and environment for statistical computing. R Foundation for
+Statistical Computing, Vienna, Austria. URL <a href="https://www.R-project.org/"> https://www.R-project.org/ </a>.</li>
+          <li> Chang, W., Cheng, J., Allaire, J.J., Xie, Y., McPherson, J. (2020). shiny: Web Application
+Framework for R. R package version 1.5.0. <a href="https://CRAN.R-project.org/package=shiny">https://CRAN.R-project.org/package=shiny </a> </li>
+        </ol>
 
 
       </div>
