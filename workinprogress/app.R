@@ -34,7 +34,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                     fileInput("file2", label = "Index object"),
                     
                     radioButtons("menuType", "Choose method of Submodel input :",
-                                c("Manually" = "manual",
+                                c("Default sub-models" = "default",
+                                  "Manually" = "manual",
                                   "Drop down menu" = "dropdown")
                                 ),
                     
@@ -261,8 +262,12 @@ server <- function(session, input, output) {
   fit <- eventReactive(input$run,{
     if (input$menuType == 'dropdown'){
       return(sca(stk(),idx(), fmodel = fmod(), qmodel = qmod(), srmodel = srmod()))
-    } else {
+    } 
+    else if (input$menuType == "manual"){
       return(sca(stk(),idx(), fmodel = fmod_2(), qmodel = qmod_2(), srmodel = srmod_2()))
+    }
+    else if (input$menuType == "default") {
+      return(sca(stk(), idx()))
     }
     
   })
