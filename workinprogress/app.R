@@ -3,6 +3,7 @@
 
 library(shiny)
 library(shinythemes)
+library(shinyBS)
 library(FLCore)
 library(FLa4a)
 library(FLBRP)
@@ -30,8 +31,11 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                 sidebarLayout(
                   sidebarPanel(
                     
-                    fileInput("file1", label = "Stock object"),
-                    fileInput("file2", label = "Index object"),
+                    fileInput("file1", label = "Stock object",
+                              placeholder = 'FLStock object saved in Rdata format'),
+                    fileInput("file2", label = "Index object",
+                              placeholder = 'FLindices object saved in Rdata format'),
+
                     
                     radioButtons("menuType", "Choose method of Submodel input :",
                                 c("Default sub-models" = "default",
@@ -103,7 +107,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                       textInput("qmodel", "qmodel (separate qmodels with &) :",value = ""),
                       textInput("srmodel", "srmodel :",value = "")
                     ),
-                    actionButton("run","Run Assessment")
+                    actionButton("run","Run Assessment"),
+                    br(),br(),
+                    downloadButton("downloadFit", "Download fitted object", class = 'dlButton')
                     
                     
                   ),
@@ -272,6 +278,18 @@ server <- function(session, input, output) {
     
   })
   
+  #####################################################
+  
+  ############ Download handler #######################
+  output$downloadFit <- downloadHandler(
+    filename <- function(){
+      paste("fit.RData")
+    },
+    
+    content = function(file) {
+      save(fit, file = file)
+    }
+  )
   #####################################################
   # Plot input
   output$catches <- renderPlot({
